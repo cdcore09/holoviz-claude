@@ -486,12 +486,54 @@ AI-powered natural language data exploration:
 
 ## Integration with MCP Server
 
-The plugin includes MCP server configuration for real-time library access:
+The plugin includes MCP server configuration for real-time library access using Docker:
+
+### Docker Setup (Recommended)
+
+**Step 1: Pull and run the Docker container**
+
+```bash
+docker pull ghcr.io/marcskovmadsen/holoviz-mcp:latest
+
+docker run -d \
+  --name holoviz-mcp \
+  -p 8000:8000 \
+  -e HOLOVIZ_MCP_TRANSPORT=http \
+  -v ~/.holoviz-mcp:/root/.holoviz-mcp \
+  ghcr.io/marcskovmadsen/holoviz-mcp:latest
+```
+
+**Step 2: Configuration**
+
+The `.mcp.json` file is pre-configured for Docker HTTP transport:
 
 ```json
 {
   "servers": {
-    "holoviz-mcp": {
+    "holoviz": {
+      "type": "http",
+      "url": "http://localhost:8000/mcp/"
+    }
+  }
+}
+```
+
+### Alternative: Local Installation
+
+For local installation without Docker:
+
+```bash
+uv tool install holoviz-mcp[panel-extensions]
+uvx --from holoviz-mcp holoviz-mcp-update
+```
+
+Update `.mcp.json` to use stdio transport:
+
+```json
+{
+  "servers": {
+    "holoviz": {
+      "type": "stdio",
       "command": "uvx",
       "args": ["holoviz-mcp"]
     }
@@ -499,7 +541,9 @@ The plugin includes MCP server configuration for real-time library access:
 }
 ```
 
-This enables:
+### Capabilities
+
+The MCP server enables:
 - Real-time library documentation
 - Latest API reference access
 - Example gallery integration
