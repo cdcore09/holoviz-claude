@@ -1,0 +1,33 @@
+{
+  "servers": {
+    "holoviz-mcp": {
+      "command": "uvx",
+      "args": ["holoviz-mcp"],
+      "env": {
+        "HOLOVIZ_CACHE_EXAMPLES": "true",
+        "HOLOVIZ_ENABLE_INTROSPECTION": "true",
+        "HOLOVIZ_CACHE_TTL": "3600"
+      },
+      "description": "HoloViz MCP server for real-time library introspection, documentation, and example access",
+      "capabilities": [
+        "library-introspection",
+        "documentation-lookup",
+        "example-retrieval",
+        "version-information",
+        "api-reference"
+      ]
+    }
+  },
+  "toolAliases": {
+    "holoviz-docs": "holoviz-mcp/get-documentation",
+    "holoviz-examples": "holoviz-mcp/get-examples",
+    "holoviz-api": "holoviz-mcp/get-api-reference",
+    "holoviz-versions": "holoviz-mcp/get-versions"
+  },
+  "resourcePaths": {
+    "library-matrix": "/resources/library-matrix.md",
+    "best-practices": "/resources/best-practices.md",
+    "code-patterns": "/resources/code-patterns.md",
+    "troubleshooting": "/resources/troubleshooting.md"
+  }
+}
