@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+#### Plugin Structure (BREAKING)
+- Restructured to follow Claude Code marketplace pattern
+- **marketplace.json** moved to `.claude-plugin/marketplace.json`
+- Removed `plugin.json` (consolidated into marketplace.json)
+- Uses multi-plugin repository structure compatible with rse-agents pattern
+- Plugin paths now use relative references (`./agents/`, `./skills/`)
+
+### Added
+
 #### Skills (2 New Lumen Skills)
 - **Lumen Dashboards**: Declarative, no-code dashboard development
   - YAML-based specifications for rapid development
