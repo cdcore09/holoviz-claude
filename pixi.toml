@@ -1,0 +1,10 @@
+[workspace]
+authors = ["Cordero Core <cdcore09@gmail.com>"]
+channels = ["conda-forge"]
+name = "holoviz-agents"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[dependencies]
