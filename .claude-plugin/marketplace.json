@@ -11,7 +11,7 @@
     "plugins": [
         {
             "name": "holoviz-expert",
-            "source": ".",
+            "source": "./",
             "description": "Expert-level guidance for building interactive data visualizations and dashboards with the HoloViz ecosystem. Covers Panel, HoloViews, hvPlot, GeoViews, Datashader, Lumen, Param, and Colorcet with integrated MCP server support for real-time library introspection.",
             "version": "1.1.0",
             "author": {
