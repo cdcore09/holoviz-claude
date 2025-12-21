@@ -1,0 +1,62 @@
+{
+    "name": "holoviz-agents",
+    "owner": {
+        "name": "HoloViz Community",
+        "url": "https://github.com/holoviz"
+    },
+    "metadata": {
+        "description": "Expert AI agents for interactive data visualization and dashboards with the HoloViz ecosystem",
+        "version": "1.1.0"
+    },
+    "plugins": [
+        {
+            "name": "holoviz-expert",
+            "source": ".",
+            "description": "Expert-level guidance for building interactive data visualizations and dashboards with the HoloViz ecosystem. Covers Panel, HoloViews, hvPlot, GeoViews, Datashader, Lumen, Param, and Colorcet with integrated MCP server support for real-time library introspection.",
+            "version": "1.1.0",
+            "author": {
+                "name": "HoloViz Community",
+                "url": "https://holoviz.org"
+            },
+            "homepage": "https://github.com/holoviz/holoviz-claude-plugin",
+            "repository": "https://github.com/holoviz/holoviz-claude-plugin",
+            "license": "BSD-3-Clause",
+            "keywords": [
+                "visualization",
+                "panel",
+                "holoviews",
+                "hvplot",
+                "geoviews",
+                "datashader",
+                "lumen",
+                "param",
+                "colorcet",
+                "dashboard",
+                "interactive",
+                "data-science",
+                "geospatial",
+                "ai-agents",
+                "claude-plugins"
+            ],
+            "category": "data-science",
+            "strict": false,
+            "agents": [
+                "./agents/panel-specialist.md",
+                "./agents/visualization-designer.md",
+                "./agents/data-engineer.md",
+                "./agents/geo-spatial-expert.md"
+            ],
+            "skills": [
+                "./skills/panel-dashboards",
+                "./skills/plotting-fundamentals",
+                "./skills/data-visualization",
+                "./skills/geospatial-visualization",
+                "./skills/advanced-rendering",
+                "./skills/parameterization",
+                "./skills/colormaps-styling",
+                "./skills/lumen-dashboards",
+                "./skills/lumen-ai"
+            ]
+        }
+    ]
+}
