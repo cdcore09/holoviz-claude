@@ -1,3 +1,9 @@
+---
+name: colormaps-styling
+description: Master color management and visual styling with Colorcet. Use this skill when selecting appropriate colormaps, creating accessible and colorblind-friendly visualizations, applying consistent themes, or customizing plot aesthetics with perceptually uniform color palettes.
+compatibility: Requires colorcet >= 3.1.0, holoviews >= 1.18.0, panel >= 1.3.0, bokeh >= 3.0.0
+---
+
 # Colormaps & Styling Skill
 
 ## Overview
