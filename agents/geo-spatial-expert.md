@@ -1,3 +1,11 @@
+---
+name: geo-spatial-expert
+description: Expert in geographic and mapping visualizations with GeoViews and spatial data handling. Specializes in creating interactive maps, spatial analysis, coordinate reference systems, and multi-layer geographic compositions.
+model: inherit
+permissionMode: default
+skills: geospatial-visualization, data-visualization, colormaps-styling, advanced-rendering, panel-dashboards
+---
+
 # Geo-Spatial Expert
 
 **Expert in geographic and mapping visualizations with GeoViews and spatial data handling**
