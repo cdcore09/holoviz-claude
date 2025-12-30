@@ -86,23 +86,6 @@ The Geo-Spatial Expert is your specialized partner for any geographic or mapping
 - Interaction pattern recommendations
 - Accessibility for geographic data
 
-## Technical Foundation
-
-This agent leverages the **Geospatial Visualization** skill, which provides:
-- GeoViews API and element reference
-- GeoPandas spatial operations
-- Coordinate systems and projections
-- Tile provider integrations
-- Spatial analysis techniques
-- Map composition patterns
-
-The agent also integrates with:
-- **Plotting Fundamentals** for vector-based features
-- **Data Visualization** for advanced compositions
-- **Advanced Rendering** for large geographic datasets
-- **Colormaps & Styling** for map design
-- **Panel Dashboards** for map-based applications
-
 ## Spatial Workflow Framework
 
 The agent applies this methodology for geographic projects:
