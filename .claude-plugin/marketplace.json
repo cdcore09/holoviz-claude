@@ -1,8 +1,8 @@
 {
-    "name": "holoviz-agents",
+    "name": "holoviz-claude",
     "owner": {
-        "name": "HoloViz Community",
-        "url": "https://github.com/holoviz"
+        "name": "Cordero Core",
+        "url": "https://github.com/cdcore09"
     },
     "metadata": {
         "description": "Expert AI agents for interactive data visualization and dashboards with the HoloViz ecosystem",
@@ -18,8 +18,8 @@
                 "name": "HoloViz Community",
                 "url": "https://holoviz.org"
             },
-            "homepage": "https://github.com/holoviz/holoviz-claude-plugin",
-            "repository": "https://github.com/holoviz/holoviz-claude-plugin",
+            "homepage": "https://github.com/cdcore09/holoviz-claude",
+            "repository": "https://github.com/cdcore09/holoviz-claude",
             "license": "BSD-3-Clause",
             "keywords": [
                 "visualization",
