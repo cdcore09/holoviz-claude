@@ -11,7 +11,7 @@
     "plugins": [
         {
             "name": "holoviz-expert",
-            "source": "./",
+            "source": "./plugins/holoviz-expert",
             "description": "Expert-level guidance for building interactive data visualizations and dashboards with the HoloViz ecosystem. Covers Panel, HoloViews, hvPlot, GeoViews, Datashader, Lumen, Param, and Colorcet with integrated MCP server support for real-time library introspection.",
             "version": "1.1.0",
             "author": {
@@ -41,21 +41,21 @@
             "category": "data-science",
             "strict": false,
             "agents": [
-                "./agents/panel-specialist.md",
-                "./agents/visualization-designer.md",
-                "./agents/data-engineer.md",
-                "./agents/geo-spatial-expert.md"
+                "./plugins/holoviz-expert/agents/panel-specialist.md",
+                "./plugins/holoviz-expert/agents/visualization-designer.md",
+                "./plugins/holoviz-expert/agents/data-engineer.md",
+                "./plugins/holoviz-expert/agents/geo-spatial-expert.md"
             ],
             "skills": [
-                "./skills/panel-dashboards",
-                "./skills/plotting-fundamentals",
-                "./skills/data-visualization",
-                "./skills/geospatial-visualization",
-                "./skills/advanced-rendering",
-                "./skills/parameterization",
-                "./skills/colormaps-styling",
-                "./skills/lumen-dashboards",
-                "./skills/lumen-ai"
+                "./plugins/holoviz-expert/skills/panel-dashboards",
+                "./plugins/holoviz-expert/skills/plotting-fundamentals",
+                "./plugins/holoviz-expert/skills/data-visualization",
+                "./plugins/holoviz-expert/skills/geospatial-visualization",
+                "./plugins/holoviz-expert/skills/advanced-rendering",
+                "./plugins/holoviz-expert/skills/parameterization",
+                "./plugins/holoviz-expert/skills/colormaps-styling",
+                "./plugins/holoviz-expert/skills/lumen-dashboards",
+                "./plugins/holoviz-expert/skills/lumen-ai"
             ]
         }
     ]
