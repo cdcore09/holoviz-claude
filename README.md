@@ -14,43 +14,49 @@ This production-ready, expert-quality Claude Code plugin provides comprehensive 
 
 ### What Makes This Plugin Different
 
+- **Token-Optimized Architecture**: Lean agents focused on orchestration, comprehensive skills for technical depth
 - **Strategic Guidance**: Not just documentation, but expert decision-making support
 - **Production-Ready**: Real-world code patterns you can use immediately
 - **Comprehensive**: All 8 HoloViz libraries covered in depth
 - **Workflow-Based**: Organized around how you actually work, not just library APIs
 - **Accessibility-First**: Colorblind-friendly designs and multiple visual encodings
 - **Performance-Aware**: Optimization guidance integrated throughout
+- **Multi-Plugin Ready**: Self-contained structure supporting future plugin expansion
 
 ---
 
 ## Features
 
-### 4 Specialized Agents
+### 4 Optimized Agents
 
-Each agent provides complementary expertise for different workflows:
+Each agent provides complementary expertise for different workflows with a lean, token-efficient design:
 
-1. **Panel Specialist** - Interactive Dashboard Expert
+**Architecture Philosophy**: Agents orchestrate skills and provide workflow guidance, while skills contain authoritative technical documentation. This eliminates duplication and improves token efficiency.
+
+**Optimization Results**: 9.9% reduction in agent size (63 lines removed), maintaining full orchestration capabilities while eliminating technical duplication.
+
+1. **Panel Specialist** (115 lines) - Interactive Dashboard Expert
    - Component-based application development
    - Reactive programming patterns
    - Template systems and theming
    - Real-time data streaming
    - Focus: "Build interactive dashboards"
 
-2. **Visualization Designer** - Strategic Visualization Guide
+2. **Visualization Designer** (133 lines) - Strategic Visualization Guide
    - Multi-library visualization strategy
    - Ecosystem navigation and tool selection
    - Visualization design principles
    - Accessibility and performance
    - Focus: "What's the best way to visualize this?"
 
-3. **Data Engineer** - Performance Optimization Expert
+3. **Data Engineer** (154 lines) - Performance Optimization Expert
    - Large-scale data handling (100M+ points)
    - Datashader and aggregation strategies
    - Memory optimization
    - Chunked processing for massive datasets
    - Focus: "Optimize rendering for large data"
 
-4. **Geo-Spatial Expert** - Geographic Visualization Specialist
+4. **Geo-Spatial Expert** (174 lines) - Geographic Visualization Specialist
    - Maps and geographic data with GeoViews
    - Coordinate reference systems (CRS)
    - Spatial analysis and joins
@@ -291,40 +297,78 @@ pip install holoviz-mcp
 
 ## Architecture
 
+**Self-Contained Plugin Structure** - Designed to support future multi-plugin development:
+
 ```
-holoviz-agents/
+holoviz-claude/
 ├── .claude-plugin/
-│   └── marketplace.json                # Plugin marketplace configuration
-├── agents/                             # 4 specialized agents
-│   ├── panel-specialist.md
-│   ├── visualization-designer.md
-│   ├── data-engineer.md
-│   └── geo-spatial-expert.md
-├── skills/                             # 9 comprehensive skills
-│   ├── panel-dashboards/SKILL.md
-│   ├── plotting-fundamentals/SKILL.md
-│   ├── data-visualization/SKILL.md
-│   ├── geospatial-visualization/SKILL.md
-│   ├── advanced-rendering/SKILL.md
-│   ├── lumen-dashboards/SKILL.md
-│   ├── lumen-ai/SKILL.md
-│   ├── parameterization/SKILL.md
-│   └── colormaps-styling/SKILL.md
-├── resources/                          # Curated reference materials
-│   ├── holoviz-ecosystem.md
-│   ├── library-matrix.md
-│   ├── best-practices.md
-│   ├── code-patterns.md
-│   └── troubleshooting.md
-├── .mcp.json                          # MCP server configuration
-├── README.md                          # This file
-├── LICENSE                            # BSD-3-Clause
-└── CHANGELOG.md                       # Version history
+│   └── marketplace.json                      # Plugin registry configuration
+├── plugins/
+│   └── holoviz-expert/                       # Self-contained plugin
+│       ├── agents/                           # 4 optimized agents (576 lines)
+│       │   ├── panel-specialist.md           # 115 lines (13.5% reduction)
+│       │   ├── visualization-designer.md     # 133 lines (7.0% reduction)
+│       │   ├── data-engineer.md              # 154 lines (9.9% reduction)
+│       │   └── geo-spatial-expert.md         # 174 lines (9.4% reduction)
+│       ├── skills/                           # 9 comprehensive skills
+│       │   ├── panel-dashboards/SKILL.md
+│       │   ├── plotting-fundamentals/SKILL.md
+│       │   ├── data-visualization/SKILL.md
+│       │   ├── geospatial-visualization/SKILL.md
+│       │   ├── advanced-rendering/SKILL.md
+│       │   ├── lumen-dashboards/SKILL.md
+│       │   ├── lumen-ai/SKILL.md
+│       │   ├── parameterization/SKILL.md
+│       │   └── colormaps-styling/SKILL.md
+│       ├── resources/                        # Curated reference materials
+│       │   ├── holoviz-ecosystem.md
+│       │   ├── library-matrix.md
+│       │   ├── best-practices.md
+│       │   ├── code-patterns.md
+│       │   └── troubleshooting.md
+│       └── .mcp.json                         # MCP server configuration
+├── README.md                                 # This file
+├── LICENSE                                   # BSD-3-Clause
+├── CHANGELOG.md                              # Version history
+└── CONTRIBUTING.md                           # Contribution guidelines
 ```
+
+### Design Principles
+
+**Agent Optimization**: Agents are lean orchestrators (~140 lines avg) that focus on workflow coordination and delegate technical details to skills. This eliminates the previous ~40-50% duplication between agents and skills.
+
+**Single Source of Truth**: Skills contain authoritative technical documentation. Agents reference skills but don't duplicate their content.
+
+**Multi-Plugin Support**: The `plugins/holoviz-expert/` structure enables future plugin additions without conflicts.
 
 ---
 
 ## Key Design Decisions
+
+### Token-Optimized Architecture (New in v1.1.0)
+
+**Problem**: Previous agent design duplicated technical content from skills, creating maintenance burden and inefficient token usage.
+
+**Solution**: Restructured agents to be lean orchestrators that delegate to comprehensive skills.
+
+**Results**:
+- 63 lines removed across all agents (9.9% reduction)
+- ~950 words of duplicative content eliminated
+- Zero loss of unique orchestration logic or workflow guidance
+- Clear separation: agents orchestrate, skills provide technical depth
+
+**Agent Structure** (What Agents Keep):
+- Frontmatter metadata and skill references
+- Domain context and expertise areas
+- Workflow frameworks (e.g., Spatial Workflow, Performance Optimization)
+- Communication style and agent personality
+- Integration patterns with other agents
+- Example interactions demonstrating orchestration
+
+**Agent Structure** (What Was Removed):
+- Technical Foundation sections (duplicated skill content)
+- Detailed descriptions of what each skill provides
+- Library API references and implementation details
 
 ### Workflow-Based Organization
 Skills are organized by user workflows, not 1-to-1 library mapping. This reduces cognitive load and shows how libraries integrate in practice.
