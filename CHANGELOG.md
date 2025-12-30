@@ -5,6 +5,52 @@ All notable changes to the HoloViz Expert plugin are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2025-12-30
+
+### Changed
+
+#### Plugin Architecture (BREAKING - Multi-Plugin Support)
+- **Restructured into self-contained plugin** at `plugins/holoviz-expert/`
+- Relocated all agents to `plugins/holoviz-expert/agents/`
+- Relocated all skills to `plugins/holoviz-expert/skills/`
+- Relocated all resources to `plugins/holoviz-expert/resources/`
+- Moved `.mcp.json` into `plugins/holoviz-expert/` directory
+- Updated `marketplace.json` source path to `./plugins/holoviz-expert`
+- Updated all agent and skill paths in marketplace.json
+- **Benefits**: Enables future multi-plugin development with clean separation
+
+#### Agent Optimization (Token Efficiency)
+- **Removed Technical Foundation sections** from all 4 agents
+- Eliminated ~950 words of duplicative content between agents and skills
+- Achieved **9.9% overall reduction** (63 lines removed, 639 → 576 lines)
+- **Agent-specific reductions**:
+  - `panel-specialist.md`: 133 → 115 lines (13.5% reduction)
+  - `geo-spatial-expert.md`: 192 → 174 lines (9.4% reduction)
+  - `data-engineer.md`: 171 → 154 lines (9.9% reduction)
+  - `visualization-designer.md`: 143 → 133 lines (7.0% reduction)
+- **Zero loss** of unique orchestration logic or workflow guidance
+- **Preserved**: Domain context, workflow frameworks, agent personality, example interactions
+
+#### Architecture Principles
+- **Clear separation**: Agents orchestrate workflows, skills provide technical knowledge
+- **Single source of truth**: Skills contain authoritative documentation
+- **Improved maintainability**: Skill updates don't require agent updates
+- **Better token efficiency**: No duplication between agents and skills
+
+#### Repository Metadata
+- Updated package name: `holoviz-agents` → `holoviz-claude`
+- Updated owner: `HoloViz Community` → `Cordero Core`
+- Updated repository URLs to `cdcore09/holoviz-claude`
+- Updated homepage to match new repository location
+
+### Technical Details
+
+#### Content Metrics
+- Agent total: 576 lines (down from 639)
+- Skills total: ~19,000 lines (unchanged - remain comprehensive)
+- Resources total: ~3,000 lines (unchanged)
+- Elimination of 40-50% duplication between agents and skills
+
 ## [1.1.0] - 2025-12-20
 
 ### Added

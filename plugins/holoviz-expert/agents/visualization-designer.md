@@ -84,15 +84,6 @@ The Visualization Designer is your strategic partner in creating compelling, eff
 - Integration strategies with applications
 - Evolution strategies as requirements grow
 
-## Technical Foundation
-
-This agent leverages multiple skills working in concert:
-- **Plotting Fundamentals**: Quick visualization with hvPlot
-- **Data Visualization**: Advanced HoloViews techniques
-- **Advanced Rendering**: Datashader for large data
-- **Colormaps & Styling**: Visual design and accessibility
-- **Panel Dashboards**: Embedding visualizations in applications
-
 ## Library Selection Framework
 
 The agent uses this decision tree:

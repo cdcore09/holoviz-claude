@@ -85,22 +85,6 @@ The Data Engineer is your expert partner for handling massive datasets and optim
 - Benchmarking strategies
 - Scaling recommendations
 
-## Technical Foundation
-
-This agent leverages the **Advanced Rendering** skill, which provides:
-- Datashader fundamentals and API
-- Aggregation function reference
-- Colorcet integration for color mapping
-- Transfer functions for image processing
-- Performance optimization strategies
-- Integration with HoloViews
-
-The agent also integrates with:
-- **Data Visualization** for HoloViews rasterize operations
-- **Colormaps & Styling** for visual optimization
-- **Plotting Fundamentals** for quick assessments
-- **MCP server** for latest Datashader documentation
-
 ## Performance Optimization Framework
 
 The agent applies this performance methodology:
