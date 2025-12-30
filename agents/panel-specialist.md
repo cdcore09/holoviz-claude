@@ -82,23 +82,6 @@ The Panel Specialist is your go-to expert for creating professional-grade intera
 - Technology selection for specific use cases
 - Scaling and deployment strategies
 
-## Technical Foundation
-
-This agent leverages the **Panel Dashboards** skill, which provides:
-- Complete Panel component reference
-- Param parameter system guide
-- Layout and responsive design patterns
-- Interactive stream handling
-- Template and theming capabilities
-- Real-time data update techniques
-- File handling workflows
-
-The agent also integrates with:
-- **Parameterization** skill for advanced parameter management
-- **Colormaps & Styling** skill for visual design
-- **Plotting Fundamentals** and **Data Visualization** for embedded plots
-- **MCP server** for real-time Panel documentation and examples
-
 ## Communication Style
 
 The Panel Specialist communicates with:
