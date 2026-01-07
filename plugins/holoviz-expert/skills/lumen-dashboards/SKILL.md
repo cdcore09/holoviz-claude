@@ -8,363 +8,302 @@ compatibility: Requires lumen >= 0.10.0, panel >= 1.3.0, holoviews >= 1.18.0, pa
 
 ## Overview
 
-Master building declarative, no-code data dashboards with Lumen's YAML-based specification system. This skill covers creating interactive data exploration dashboards through configuration rather than programming, enabling rapid development of data applications with sources, transforms, views, and layouts.
+Lumen is a declarative framework for creating data dashboards through YAML specifications. Build interactive data exploration dashboards without writing code - just configuration.
 
-## Dependencies
+### What is Lumen?
 
-- lumen >= 0.10.0
-- panel >= 1.3.0
-- holoviews >= 1.18.0
-- param >= 2.0.0
+Lumen provides a declarative approach to building data dashboards:
 
-## What is Lumen?
+- **No-code dashboards**: Define everything in YAML
+- **Data pipelines**: Sources → Transforms → Views
+- **Interactive exploration**: Built-in filters and cross-filtering
+- **Component library**: Reusable sources, transforms, views
+- **Live updates**: Auto-reload and real-time data
 
-Lumen is a declarative framework built on Panel for creating data dashboards and exploration interfaces through YAML specifications or Python API. It provides:
+### Lumen vs Panel vs Lumen AI
 
-- **Declarative approach**: Define dashboards in YAML without writing code
-- **Data pipelines**: Connect sources → transforms → views in reproducible workflows
-- **Interactive exploration**: Built-in filters, cross-filtering, and drill-down
-- **Component library**: Reusable sources, transforms, and visualization views
-- **Live updates**: Auto-reload during development, real-time data updates in production
-
-### Lumen vs Panel
+| Feature | Lumen Dashboards | Panel | Lumen AI |
+|---------|------------------|-------|----------|
+| **Approach** | Declarative YAML | Imperative Python | Conversational |
+| **Code Required** | No | Yes | No |
+| **Use Case** | Fixed dashboards | Custom apps | Ad-hoc exploration |
+| **Flexibility** | Medium | High | High |
+| **Development Speed** | Very fast | Medium | Very fast |
 
 **Use Lumen when**:
 - Building standard data exploration dashboards
-- Working with non-programmers who need to modify dashboards
+- Working with non-programmers
 - Want rapid prototyping with configuration
-- Need reproducible, shareable dashboard specifications
-- Working with common data patterns (load → filter → visualize)
+- Need reproducible dashboard specifications
 
 **Use Panel when**:
+- Need fine-grained control over components
 - Building custom application logic
-- Need fine-grained control over every component
-- Creating novel interactions not covered by Lumen
-- Developing libraries or reusable components
+- Creating novel interactions
 
-**Key difference**: Lumen is *declarative* (describe what you want), Panel is *imperative* (specify how to build it).
+**Use Lumen AI when**:
+- Users need ad-hoc exploration
+- Questions vary unpredictably
+- Enabling self-service analytics
 
-## Core Capabilities
+## Quick Start
 
-### 1. Data Sources
+### Installation
 
-Lumen supports multiple source types for loading data:
+```bash
+pip install lumen
+```
 
-#### File Sources
+### Your First Dashboard
+
+**File: `dashboard.yaml`**
 
 ```yaml
 sources:
-  local_csv:
+  data:
     type: file
     tables:
-      data: ./data/penguins.csv
+      penguins: https://datasets.holoviz.org/penguins/v1/penguins.csv
 
-  remote_data:
+pipelines:
+  main:
+    source: data
+    table: penguins
+
+    filters:
+      - type: widget
+        field: species
+
+layouts:
+  - title: Penguin Explorer
+    views:
+      - type: hvplot
+        pipeline: main
+        kind: scatter
+        x: bill_length_mm
+        y: bill_depth_mm
+        by: species
+        title: Bill Dimensions
+```
+
+**Launch:**
+```bash
+lumen serve dashboard.yaml --show
+```
+
+## Core Concepts
+
+### 1. Sources
+
+Data sources provide tables for your dashboard.
+
+**Supported sources**:
+- **File**: CSV, Parquet, Excel, JSON
+- **Database**: PostgreSQL, DuckDB, SQLite
+- **REST API**: JSON endpoints
+- **Intake**: Data catalogs
+
+**Quick example**:
+```yaml
+sources:
+  mydata:
     type: file
     tables:
-      sales: https://example.com/sales.parquet
-      inventory: https://example.com/inventory.csv
-
-  excel_source:
-    type: file
-    tables:
-      sheet1: ./workbook.xlsx
+      sales: ./data/sales.csv
 ```
 
-**Supported formats**: CSV, Parquet, Excel, JSON, Feather
+**See**: [Data Sources Reference](../../resources/lumen-dashboards/sources.md) for comprehensive source configuration.
 
-#### Database Sources
+### 2. Pipelines
+
+Pipelines define data flows: Source → Filters → Transforms → Views
+
+**Basic pipeline**:
+```yaml
+pipelines:
+  sales_pipeline:
+    source: mydata
+    table: sales
+
+    filters:
+      - type: widget
+        field: region
+
+    transforms:
+      - type: aggregate
+        by: ['category']
+        aggregate:
+          total_sales: {revenue: sum}
+```
+
+**Components**:
+- **Filters**: Interactive widgets for user input
+- **Transforms**: Data manipulation (filter, aggregate, sort, SQL)
+- **Views**: Visualizations and tables
+
+### 3. Filters
+
+Add interactive controls:
 
 ```yaml
-sources:
-  postgres_db:
-    type: postgres
-    connection_string: postgresql://user:password@localhost:5432/mydb
-    tables:
-      - customers
-      - orders
-      - products
+filters:
+  # Dropdown select
+  - type: widget
+    field: category
 
-  duckdb_source:
-    type: duckdb
-    uri: ./analytics.duckdb
-    tables:
-      - events
-      - metrics
+  # Multi-select
+  - type: widget
+    field: region
+    multiple: true
+
+  # Date range
+  - type: widget
+    field: date
+    widget: date_range_slider
+
+  # Numeric slider
+  - type: param
+    parameter: min_revenue
+    widget_type: FloatSlider
+    start: 0
+    end: 100000
 ```
 
-**Supported databases**: PostgreSQL, DuckDB, SQLite, and SQLAlchemy-compatible databases
+### 4. Transforms
 
-#### REST API Sources
+Process data in pipelines:
 
-```yaml
-sources:
-  api_source:
-    type: rest
-    url: https://api.example.com/data
-    tables:
-      metrics: /v1/metrics
-```
+**Common transforms**:
+- `columns`: Select specific columns
+- `query`: Filter rows with pandas query
+- `aggregate`: Group and aggregate
+- `sort`: Sort data
+- `sql`: Custom SQL queries
 
-#### Intake Catalog Sources
-
-```yaml
-sources:
-  catalog:
-    type: intake
-    uri: ./catalog.yml
-```
-
-### 2. Data Transforms
-
-Transform and process data in pipelines:
-
-#### Column Selection
-
+**Example**:
 ```yaml
 transforms:
   - type: columns
-    columns: ['name', 'age', 'city', 'revenue']
-```
+    columns: ['date', 'region', 'revenue']
 
-#### Filtering
-
-```yaml
-transforms:
   - type: query
-    query: "age > 18 and city == 'NYC'"
+    query: "revenue > 1000"
 
-  - type: filter
-    conditions:
-      age: {'>': 18}
-      status: ['active', 'pending']
-```
-
-#### Aggregation
-
-```yaml
-transforms:
   - type: aggregate
-    by: ['category', 'region']
+    by: ['region']
     aggregate:
-      revenue: sum
-      customers: count
-      avg_order: mean
+      total: {revenue: sum}
+      avg: {revenue: mean}
 ```
 
-#### Sorting
+**See**: [Data Transforms Reference](../../resources/lumen-dashboards/transforms.md) for all transform types.
 
-```yaml
-transforms:
-  - type: sort
-    by: ['date']
-    reverse: true
-```
+### 5. Views
 
-#### SQL Transforms
+Visualize data:
 
-```yaml
-transforms:
-  - type: sql
-    query: |
-      SELECT
-        category,
-        SUM(revenue) as total_revenue,
-        COUNT(*) as count
-      FROM table
-      WHERE date >= '2024-01-01'
-      GROUP BY category
-      ORDER BY total_revenue DESC
-```
+**View types**:
+- `hvplot`: Interactive plots (line, scatter, bar, etc.)
+- `table`: Data tables
+- `indicator`: KPI metrics
+- `vega`: Vega-Lite specifications
+- `altair`: Altair charts
+- `plotly`: Plotly charts
 
-#### Custom Python Transforms
-
-```yaml
-transforms:
-  - type: custom
-    module: mymodule.transforms
-    transform: normalize_data
-    kwargs:
-      method: 'z-score'
-```
-
-### 3. Filters (Interactive Widgets)
-
-Add interactive filtering to dashboards:
-
-#### Widget Filters
-
-```yaml
-filters:
-  - type: widget
-    field: category
-    label: Product Category
-
-  - type: widget
-    field: date_range
-    widget: date_range_slider
-    start: '2024-01-01'
-    end: '2024-12-31'
-
-  - type: widget
-    field: price
-    widget: range_slider
-    start: 0
-    end: 1000
-    step: 10
-```
-
-#### Constant Filters
-
-```yaml
-filters:
-  - type: constant
-    field: status
-    value: 'active'
-```
-
-#### Cross-filtering
-
-```yaml
-# Enable cross-filtering across views
-config:
-  cross_filter: true
-
-layouts:
-  - title: Dashboard
-    cross_filter_group: 'main'
-    views: [...]
-```
-
-### 4. Views (Visualizations)
-
-Display data with various view types:
-
-#### Table View
-
+**Example**:
 ```yaml
 views:
-  - type: table
-    title: Raw Data
-    show_index: false
-    pagination: front
-    page_size: 20
-    sorters: [name, date]
-    editors:
-      status: ['active', 'inactive']
-```
-
-#### hvPlot Views
-
-```yaml
-views:
-  # Scatter plot
   - type: hvplot
-    kind: scatter
-    x: bill_length_mm
-    y: bill_depth_mm
-    color: species
-    size: body_mass_g
-    responsive: true
-    height: 400
-
-  # Line chart
-  - type: hvplot
+    pipeline: main
     kind: line
     x: date
     y: revenue
     by: category
-    responsive: true
 
-  # Bar chart
-  - type: hvplot
-    kind: bar
-    x: product
-    y: sales
-    rot: 45
-
-  # Histogram
-  - type: hvplot
-    kind: hist
-    y: age
-    bins: 20
-    alpha: 0.7
-```
-
-#### Plotly Views
-
-```yaml
-views:
-  - type: plotly
-    x: category
-    y: revenue
-    kind: bar
-    color: region
-    barmode: group
-```
-
-#### Altair Views
-
-```yaml
-views:
-  - type: altair
-    spec:
-      mark: point
-      encoding:
-        x: {field: x, type: quantitative}
-        y: {field: y, type: quantitative}
-        color: {field: category, type: nominal}
-```
-
-#### Indicator Views
-
-```yaml
-views:
   - type: indicator
+    pipeline: main
     field: total_revenue
-    title: Total Revenue
+    title: Total Sales
     format: '${value:,.0f}'
-    color: green
-
-  - type: indicator
-    field: avg_satisfaction
-    title: Customer Satisfaction
-    format: '{value:.1%}'
-    color_ranges:
-      - [0, 0.7, 'red']
-      - [0.7, 0.85, 'orange']
-      - [0.85, 1.0, 'green']
 ```
 
-#### String Views (KPI Cards)
+**See**: [Views Reference](../../resources/lumen-dashboards/views.md) for all view types and options.
+
+### 6. Layouts
+
+Arrange views on the page:
 
 ```yaml
-views:
-  - type: string
-    template: |
-      # Q4 Performance
+layouts:
+  - title: Overview
+    layout: [[0, 1, 2], [3], [4, 5]]  # Grid positions
+    views:
+      - type: indicator
+        # View 0 config...
 
-      **Total Sales**: ${revenue:,.0f}
-      **Growth**: +{growth:.1%}
-      **Target**: {target_percent:.0%} achieved
-    height: 200
+      - type: indicator
+        # View 1 config...
+
+      - type: hvplot
+        # View 2 config...
 ```
 
-### 5. Pipelines
+**Layout types**:
+- **Grid**: `[[0, 1], [2, 3]]`
+- **Tabs**: Multiple layouts become tabs
+- **Responsive**: Adapts to screen size
 
-Combine sources, transforms, filters, and views:
+**See**: [Layouts Reference](../../resources/lumen-dashboards/layouts.md) for advanced layout patterns.
+
+## Common Patterns
+
+### Pattern 1: KPI Dashboard
 
 ```yaml
 sources:
-  sales_db:
-    type: postgres
-    connection_string: ${SALES_DB_URL}
-    tables: [transactions]
+  metrics:
+    type: file
+    tables:
+      data: ./metrics.csv
 
 pipelines:
-  sales_pipeline:
-    source: sales_db
-    table: transactions
+  kpis:
+    source: metrics
+    table: data
+    transforms:
+      - type: aggregate
+        aggregate:
+          total_revenue: {revenue: sum}
+          total_orders: {orders: sum}
+          avg_order_value: {revenue: mean}
+
+layouts:
+  - title: KPIs
+    layout: [[0, 1, 2]]
+    views:
+      - type: indicator
+        pipeline: kpis
+        field: total_revenue
+        format: '${value:,.0f}'
+
+      - type: indicator
+        pipeline: kpis
+        field: total_orders
+        format: '{value:,.0f}'
+
+      - type: indicator
+        pipeline: kpis
+        field: avg_order_value
+        format: '${value:.2f}'
+```
+
+### Pattern 2: Filtered Exploration
+
+```yaml
+pipelines:
+  explorer:
+    source: mydata
+    table: sales
 
     filters:
       - type: widget
@@ -372,446 +311,38 @@ pipelines:
         label: Region
 
       - type: widget
+        field: category
+        label: Category
+        multiple: true
+
+      - type: widget
         field: date
         widget: date_range_slider
 
-    transforms:
-      - type: query
-        query: "status == 'completed'"
-
-      - type: aggregate
-        by: ['product_category', 'region']
-        aggregate:
-          revenue: sum
-          quantity: sum
-          avg_price: mean
-
-      - type: sort
-        by: ['revenue']
-        reverse: true
-
-layouts:
-  - title: Sales Dashboard
-    pipeline: sales_pipeline
-    views:
-      - type: indicator
-        field: revenue
-        title: Total Revenue
-        format: '${value:,.0f}'
-
-      - type: hvplot
-        kind: bar
-        x: product_category
-        y: revenue
-        color: region
-        responsive: true
-
-      - type: table
-        title: Detailed Breakdown
-```
-
-### 6. Layouts
-
-Organize views in responsive layouts:
-
-#### Row/Column Layouts
-
-```yaml
-layouts:
-  - title: Dashboard
-    pipeline: data_pipeline
-    layout: [[0, 1], [2]]  # Row 1: views 0,1 | Row 2: view 2
-    sizing_mode: stretch_width
-    height: 800
-
-    views:
-      - type: indicator
-        field: total_sales
-
-      - type: indicator
-        field: avg_rating
-
-      - type: hvplot
-        kind: line
-        x: date
-        y: revenue
-```
-
-#### Tabs Layout
-
-```yaml
-layouts:
-  - title: Multi-Tab Dashboard
-    tabs: true
-
-    - title: Overview
-      pipeline: overview_pipeline
-      views: [...]
-
-    - title: Detailed Analysis
-      pipeline: detail_pipeline
-      views: [...]
-```
-
-#### Faceted Layout
-
-```yaml
-layouts:
-  - title: Regional Analysis
-    pipeline: regional_pipeline
-    facet_by: region
-    ncols: 2
     views:
       - type: hvplot
         kind: scatter
-        x: x
-        y: y
+        x: price
+        y: quantity
+        by: category
+
+      - type: table
+        page_size: 20
 ```
 
-### 7. Global Configuration
-
-Dashboard-wide settings:
-
-```yaml
-config:
-  title: Sales Analytics Dashboard
-  logo: ./logo.png
-  favicon: ./favicon.ico
-
-  # Theming
-  theme: dark
-  accent_color: '#00aa41'
-
-  # Layout
-  layout: column
-
-  # Features
-  editable: true
-  show_traceback: false
-
-  # Authentication
-  auth: true
-  auth_provider: okta
-
-  # Caching
-  cache: true
-  cache_per_user: true
-```
-
-## Complete Dashboard Example
-
-### Sales Analytics Dashboard
-
-**File: `sales_dashboard.yaml`**
-
-```yaml
-config:
-  title: Q4 Sales Analytics
-  theme: default
-  sizing_mode: stretch_width
-
-sources:
-  sales_data:
-    type: file
-    tables:
-      transactions: https://data.company.com/q4_sales.parquet
-
-pipelines:
-  main_pipeline:
-    source: sales_data
-    table: transactions
-
-    filters:
-      - type: widget
-        field: region
-        label: Sales Region
-
-      - type: widget
-        field: product_category
-        label: Product Category
-
-      - type: widget
-        field: date
-        widget: date_range_slider
-        label: Date Range
-
-    transforms:
-      - type: columns
-        columns:
-          - date
-          - region
-          - product_category
-          - product_name
-          - quantity
-          - revenue
-          - customer_satisfaction
-
-      - type: query
-        query: "revenue > 0"
-
-  summary_pipeline:
-    source: sales_data
-    table: transactions
-
-    transforms:
-      - type: aggregate
-        by: ['product_category']
-        aggregate:
-          total_revenue: {revenue: sum}
-          total_quantity: {quantity: sum}
-          avg_satisfaction: {customer_satisfaction: mean}
-
-      - type: sort
-        by: ['total_revenue']
-        reverse: true
-
-layouts:
-  - title: Overview
-    layout: [[0, 1, 2], [3], [4, 5]]
-    height: 1200
-
-    # KPIs
-    - type: indicator
-      pipeline: summary_pipeline
-      field: total_revenue
-      title: Total Revenue
-      format: '${value:,.0f}'
-      color: green
-
-    - type: indicator
-      pipeline: summary_pipeline
-      field: total_quantity
-      title: Units Sold
-      format: '{value:,.0f}'
-      color: blue
-
-    - type: indicator
-      pipeline: summary_pipeline
-      field: avg_satisfaction
-      title: Avg. Satisfaction
-      format: '{value:.1%}'
-      color_ranges:
-        - [0, 0.7, 'red']
-        - [0.7, 0.85, 'orange']
-        - [0.85, 1.0, 'green']
-
-    # Revenue over time
-    - type: hvplot
-      pipeline: main_pipeline
-      kind: line
-      x: date
-      y: revenue
-      by: product_category
-      title: Revenue Trend
-      responsive: true
-      height: 400
-
-    # Category breakdown
-    - type: hvplot
-      pipeline: summary_pipeline
-      kind: bar
-      x: product_category
-      y: total_revenue
-      title: Revenue by Category
-      rot: 45
-      responsive: true
-      height: 400
-
-    # Detailed table
-    - type: table
-      pipeline: main_pipeline
-      title: Transaction Details
-      page_size: 15
-      show_index: false
-      responsive: true
-      height: 400
-```
-
-**Launch:**
-```bash
-lumen serve sales_dashboard.yaml --show --autoreload
-```
-
-## Best Practices
-
-### 1. Data Source Management
-
-**Use environment variables for credentials:**
-```yaml
-sources:
-  production_db:
-    type: postgres
-    connection_string: ${DATABASE_URL}
-```
-
-**Separate configuration for environments:**
-```bash
-# Development
-lumen serve dashboard.yaml --dev
-
-# Production
-export DATABASE_URL="postgres://..."
-lumen serve dashboard.yaml
-```
-
-### 2. Performance Optimization
-
-**Pre-aggregate large datasets:**
-```yaml
-transforms:
-  # Aggregate before filtering for better performance
-  - type: aggregate
-    by: ['date', 'category']
-    aggregate:
-      value: sum
-
-  - type: query
-    query: "date >= '2024-01-01'"
-```
-
-**Use appropriate file formats:**
-- Parquet for large columnar data
-- CSV for small, human-readable data
-- Feather for fast I/O within Python ecosystem
-
-**Enable caching:**
-```yaml
-config:
-  cache: true
-  cache_per_user: true  # For multi-user deployments
-```
-
-### 3. Layout and Responsiveness
-
-**Always use responsive sizing:**
-```yaml
-layouts:
-  - sizing_mode: stretch_width
-    views:
-      - type: hvplot
-        responsive: true
-        height: 400  # Set explicit height with responsive width
-```
-
-**Mobile-friendly layouts:**
-```yaml
-layouts:
-  - ncols: 1  # Single column on mobile
-    views: [...]
-```
-
-### 4. Filter Design
-
-**Provide sensible defaults:**
-```yaml
-filters:
-  - type: widget
-    field: date
-    widget: date_range_slider
-    start: '2024-01-01'
-    end: '2024-12-31'
-    default: ['2024-10-01', '2024-12-31']  # Default to Q4
-```
-
-**Group related filters:**
-```yaml
-layouts:
-  - title: Dashboard
-    sidebar:
-      - '## Time Period'
-      - {type: widget, field: date}
-      - '## Geography'
-      - {type: widget, field: region}
-      - {type: widget, field: country}
-```
-
-### 5. Validation
-
-**Validate specifications before deployment:**
-```bash
-lumen validate dashboard.yaml
-```
-
-**Check for common issues:**
-- Missing source tables
-- Invalid field references
-- Circular dependencies
-- Unsupported transform combinations
-
-## Python API
-
-For programmatic dashboard creation:
-
-```python
-from lumen.sources import FileSource
-from lumen.transforms import Aggregate
-from lumen.filters import WidgetFilter
-from lumen.views import hvPlotView, IndicatorView
-from lumen.pipeline import Pipeline
-from lumen.dashboard import Dashboard
-
-# Define components
-source = FileSource(tables={'sales': 'data/sales.csv'})
-
-pipeline = Pipeline(
-    source=source,
-    table='sales',
-    filters=[
-        WidgetFilter(field='region'),
-        WidgetFilter(field='category')
-    ],
-    transforms=[
-        Aggregate(
-            by=['category'],
-            aggregate={'revenue': 'sum', 'quantity': 'sum'}
-        )
-    ]
-)
-
-# Create views
-kpi = IndicatorView(
-    pipeline=pipeline,
-    field='revenue',
-    title='Total Revenue',
-    format='${value:,.0f}'
-)
-
-chart = hvPlotView(
-    pipeline=pipeline,
-    kind='bar',
-    x='category',
-    y='revenue',
-    responsive=True
-)
-
-# Build dashboard
-dashboard = Dashboard(
-    title='Sales Dashboard',
-    pipelines={'main': pipeline},
-    views=[kpi, chart],
-    layout=[[0], [1]]
-)
-
-# Serve
-dashboard.show()
-```
-
-## Common Patterns
-
-### Pattern 1: Multi-Source Dashboard
+### Pattern 3: Multi-Source Dashboard
 
 ```yaml
 sources:
   sales_db:
     type: postgres
-    connection_string: ${SALES_DB}
-    tables: [orders]
+    connection_string: postgresql://localhost/sales
+    tables: [orders, customers]
 
-  inventory_api:
-    type: rest
-    url: https://api.inventory.com
+  inventory_file:
+    type: file
     tables:
-      stock: /v1/stock
+      stock: ./inventory.csv
 
 pipelines:
   sales_pipeline:
@@ -819,265 +350,370 @@ pipelines:
     table: orders
 
   inventory_pipeline:
-    source: inventory_api
+    source: inventory_file
     table: stock
-
-layouts:
-  - title: Sales & Inventory
-    views:
-      - type: hvplot
-        pipeline: sales_pipeline
-        kind: line
-        x: date
-        y: revenue
-
-      - type: table
-        pipeline: inventory_pipeline
 ```
 
-### Pattern 2: Drill-Down Dashboard
+### Pattern 4: Cross-Filtering
 
 ```yaml
 pipelines:
-  overview:
-    source: data_source
-    table: metrics
-    transforms:
-      - type: aggregate
-        by: ['region']
-        aggregate: {revenue: sum}
+  main:
+    source: data
+    table: sales
 
-  detail:
-    source: data_source
-    table: metrics
     filters:
       - type: widget
-        field: region  # Links to selection in overview
+        field: region
 
 layouts:
-  - title: Drill-Down
-    cross_filter: true
+  - title: Analysis
     views:
+      # Clicking bar filters other views
       - type: hvplot
-        pipeline: overview
+        pipeline: main
         kind: bar
-        x: region
+        x: category
         y: revenue
-        title: Click a region to drill down
+        selection_group: category_filter
 
-      - type: table
-        pipeline: detail
-        title: Regional Details
+      # Responds to selection above
+      - type: hvplot
+        pipeline: main
+        kind: scatter
+        x: price
+        y: quantity
+        selection_group: category_filter
 ```
 
-### Pattern 3: Custom Component Integration
+### Pattern 5: SQL Transform
 
 ```yaml
-sources:
-  custom_data:
-    type: custom
-    module: myproject.sources
-    source_type: MyCustomSource
-    kwargs:
-      api_key: ${API_KEY}
-
 transforms:
-  - type: custom
-    module: myproject.transforms
-    transform: complex_calculation
-    kwargs:
-      parameter: value
+  - type: sql
+    query: |
+      SELECT
+        region,
+        category,
+        SUM(revenue) as total_revenue,
+        COUNT(*) as order_count,
+        AVG(revenue) as avg_order_value
+      FROM table
+      WHERE date >= '2024-01-01'
+      GROUP BY region, category
+      HAVING total_revenue > 10000
+      ORDER BY total_revenue DESC
+```
 
-views:
-  - type: custom
-    module: myproject.views
-    view_type: MyCustomView
-    field: result
+## Python API
+
+While Lumen is designed for YAML, you can also use Python:
+
+```python
+from lumen.sources import FileSource
+from lumen.pipeline import Pipeline
+from lumen.views import hvPlotView
+from lumen.dashboard import Dashboard
+import panel as pn
+
+# Create source
+source = FileSource(tables={'sales': './data/sales.csv'})
+
+# Create pipeline
+pipeline = Pipeline(source=source, table='sales')
+
+# Create view
+view = hvPlotView(
+    pipeline=pipeline,
+    kind='scatter',
+    x='price',
+    y='quantity'
+)
+
+# Create dashboard
+dashboard = Dashboard(
+    pipelines={'main': pipeline},
+    layouts=[view]
+)
+
+# Serve
+dashboard.servable()
+```
+
+**See**: [Python API Reference](../../resources/lumen-dashboards/python-api.md) for detailed API usage.
+
+## Configuration
+
+### Global Config
+
+```yaml
+config:
+  title: My Dashboard
+  theme: dark  # or 'default', 'material'
+  sizing_mode: stretch_width
+  logo: ./logo.png
+  favicon: ./favicon.ico
+  layout: column  # or 'grid', 'tabs'
+```
+
+### Themes
+
+```yaml
+config:
+  theme: material
+  theme_json:
+    palette:
+      primary: '#00aa41'
+      secondary: '#616161'
+```
+
+### Authentication
+
+```bash
+# Serve with auth
+lumen serve dashboard.yaml \
+  --oauth-provider=generic \
+  --oauth-key=${OAUTH_KEY} \
+  --oauth-secret=${OAUTH_SECRET}
 ```
 
 ## Deployment
 
-### Development Server
+### Development
 
 ```bash
-# Auto-reload on changes
+# Local with auto-reload
 lumen serve dashboard.yaml --autoreload --show
 
-# Specify port
+# Specific port
 lumen serve dashboard.yaml --port 5007
-
-# Development mode (verbose logging)
-lumen serve dashboard.yaml --dev
 ```
 
-### Production Deployment
+### Production
 
 ```bash
-# Production server with multiple workers
+# Production server
 panel serve dashboard.yaml \
   --port 80 \
   --num-procs 4 \
-  --allow-websocket-origin=dashboard.company.com
-
-# With authentication
-panel serve dashboard.yaml \
-  --oauth-provider=generic \
-  --oauth-key=${OAUTH_KEY} \
-  --oauth-secret=${OAUTH_SECRET}
-
-# Behind reverse proxy
-panel serve dashboard.yaml \
-  --prefix=/analytics \
-  --use-xheaders
+  --allow-websocket-origin=analytics.company.com
 ```
 
-### Docker Deployment
+### Docker
 
-**Dockerfile:**
 ```dockerfile
 FROM python:3.11-slim
-
 WORKDIR /app
-
 COPY requirements.txt .
 RUN pip install -r requirements.txt
-
-COPY dashboard.yaml .
-COPY data/ ./data/
-
+COPY dashboard.yaml data/ ./
 CMD ["lumen", "serve", "dashboard.yaml", "--port", "5006", "--address", "0.0.0.0"]
 ```
 
-**Docker Compose:**
+**See**: [Deployment Guide](../../resources/lumen-dashboards/deployment.md) for production deployment best practices.
+
+## Best Practices
+
+### 1. Source Organization
+
 ```yaml
-version: '3.8'
-services:
-  dashboard:
-    build: .
-    ports:
-      - "5006:5006"
-    environment:
-      - DATABASE_URL=${DATABASE_URL}
-    volumes:
-      - ./data:/app/data
+# ✅ Good: Descriptive names
+sources:
+  sales_database:
+    type: postgres
+    tables: [orders, customers]
+
+  inventory_files:
+    type: file
+    tables:
+      stock: ./inventory.csv
+
+# ❌ Bad: Generic names
+sources:
+  db1:
+    type: postgres
+  file1:
+    type: file
+```
+
+### 2. Pipeline Reusability
+
+```yaml
+# Define reusable pipelines
+pipelines:
+  base_sales:
+    source: data
+    table: sales
+    filters:
+      - type: widget
+        field: region
+
+  summary_sales:
+    pipeline: base_sales  # Extends base_sales
+    transforms:
+      - type: aggregate
+        by: ['category']
+        aggregate:
+          total: {revenue: sum}
+```
+
+### 3. Performance
+
+```yaml
+# Limit data size for large tables
+sources:
+  bigdata:
+    type: postgres
+    tables:
+      events: "SELECT * FROM events WHERE date >= '2024-01-01' LIMIT 100000"
+```
+
+### 4. User Experience
+
+```yaml
+# Provide clear labels and formatting
+filters:
+  - type: widget
+    field: region
+    label: "Sales Region"  # Clear label
+
+views:
+  - type: indicator
+    field: revenue
+    title: "Total Revenue"
+    format: '${value:,.0f}'  # Formatted display
 ```
 
 ## Troubleshooting
 
-### Issue: Dashboard Not Loading
+### Dashboard Won't Load
 
-**Check specification syntax:**
 ```bash
-lumen validate dashboard.yaml
+# Check YAML syntax
+python -c "import yaml; yaml.safe_load(open('dashboard.yaml'))"
+
+# Run with debug logging
+lumen serve dashboard.yaml --log-level=debug
 ```
 
-**Common issues:**
-- Incorrect indentation in YAML
-- Missing required fields
-- Invalid source table references
+### Data Not Showing
 
-### Issue: Data Not Displaying
+- Verify data source path/connection
+- Check table names match YAML config
+- Ensure columns referenced exist in data
 
-**Verify source connection:**
-```python
-from lumen.sources import FileSource
-source = FileSource(tables={'test': 'data.csv'})
-print(source.get('test'))
-```
+### Performance Issues
 
-**Check transform chain:**
-- Remove transforms one by one to isolate issue
-- Verify column names match exactly
-- Check for empty results after filtering
+- Limit query results (use SQL WHERE clauses)
+- Reduce number of rows displayed
+- Use aggregation before visualization
 
-### Issue: Slow Performance
+**See**: [Troubleshooting Guide](../../resources/lumen-dashboards/troubleshooting.md) for common issues.
 
-**Profile the dashboard:**
-```bash
-lumen serve dashboard.yaml --profiler pyinstrument
-```
+## Progressive Learning Path
 
-**Optimization strategies:**
-1. Pre-aggregate data at source
-2. Reduce row counts with early filtering
-3. Use appropriate file formats (Parquet)
-4. Enable caching
-5. Limit page sizes for tables
+### Level 1: Basics
+1. Create simple file-based dashboard
+2. Add filters
+3. Create basic views
 
-### Issue: Filters Not Working
+**Resources**:
+- Quick Start (this doc)
+- [Data Sources Reference](../../resources/lumen-dashboards/sources.md)
 
-**Verify field names:**
-- Field must exist in pipeline data
-- Case-sensitive matching
-- Check for spaces or special characters
+### Level 2: Transforms
+1. Filter and aggregate data
+2. Use SQL transforms
+3. Chain multiple transforms
 
-**Check filter placement:**
-```yaml
-pipelines:
-  my_pipeline:
-    filters:  # Correct placement
-      - type: widget
-        field: category
+**Resources**:
+- [Data Transforms Reference](../../resources/lumen-dashboards/transforms.md)
 
-    transforms:  # Filters applied before transforms
-      - type: aggregate
-        by: ['category']
-```
+### Level 3: Advanced Layouts
+1. Multi-page dashboards
+2. Cross-filtering
+3. Custom themes
 
-## Resources
+**Resources**:
+- [Layouts Reference](../../resources/lumen-dashboards/layouts.md)
+- [Views Reference](../../resources/lumen-dashboards/views.md)
 
-- [Lumen Documentation](https://lumen.holoviz.org)
+### Level 4: Production
+1. Database integration
+2. Authentication
+3. Deployment
+
+**Resources**:
+- [Deployment Guide](../../resources/lumen-dashboards/deployment.md)
+
+## Additional Resources
+
+### Documentation
+- **[Data Sources Reference](../../resources/lumen-dashboards/sources.md)** - All source types and configuration
+- **[Data Transforms Reference](../../resources/lumen-dashboards/transforms.md)** - Complete transform reference
+- **[Views Reference](../../resources/lumen-dashboards/views.md)** - All visualization types
+- **[Layouts Reference](../../resources/lumen-dashboards/layouts.md)** - Layout patterns and organization
+- **[Python API Reference](../../resources/lumen-dashboards/python-api.md)** - Programmatic dashboard creation
+- **[Deployment Guide](../../resources/lumen-dashboards/deployment.md)** - Production deployment
+- **[Examples](../../resources/lumen-dashboards/examples.md)** - Complete dashboard examples
+- **[Troubleshooting Guide](../../resources/lumen-dashboards/troubleshooting.md)** - Common issues
+
+### External Links
+- [Lumen Documentation](https://lumen.holoviz.org/)
 - [Lumen Gallery](https://lumen.holoviz.org/gallery/)
 - [GitHub Repository](https://github.com/holoviz/lumen)
 - [Community Discourse](https://discourse.holoviz.org)
 
 ## Use Cases
 
-### Business Intelligence Dashboards
-- Sales performance tracking
+### Business Intelligence
+- Executive dashboards
+- Sales analytics
 - Financial reporting
-- Inventory management
-- Customer analytics
+- Operational metrics
 
-### Data Exploration Tools
-- Scientific data analysis
-- Research data visualization
-- Quality assurance monitoring
-- A/B test analysis
+### Data Exploration
+- Dataset overview
+- Interactive filtering
+- Drill-down analysis
+- Comparative views
 
-### Operational Dashboards
-- Real-time monitoring
+### Real-Time Monitoring
+- Live data feeds
+- Alert dashboards
 - System metrics
-- IoT sensor data
-- Log analysis
+- Performance tracking
 
-### Self-Service Analytics
-- Enable business users to explore data
-- Reduce analyst backlog
-- Democratize data access
-- Maintain governance through configuration
+### Reporting
+- Scheduled reports
+- Standardized views
+- Shareable dashboards
+- Embedded analytics
 
 ## Summary
 
-Lumen provides a powerful declarative approach to building data dashboards:
+Lumen enables rapid dashboard development through declarative YAML specifications.
 
-**Strengths:**
-- No-code dashboard creation
-- Rapid prototyping
+**Strengths**:
+- No Python code required
+- Fast development cycle
 - Reproducible specifications
-- Extensive component library
-- Built on Panel ecosystem
+- Built-in interactivity
+- Standard dashboard patterns
 
-**When to use:**
-- Standard data exploration patterns
-- Enabling non-programmers
-- Rapid dashboard development
-- Shareable configurations
+**Ideal for**:
+- Fixed dashboard layouts
+- Standard data patterns
+- Non-programmer dashboard creators
+- Rapid prototyping
 
-**When not to use:**
-- Highly custom interactions
-- Novel visualization types
-- Complex application logic
-- Fine-grained control needs
+**Consider alternatives when**:
+- Need custom application logic → [Panel Dashboards](../panel-dashboards/SKILL.md)
+- Need ad-hoc exploration → [Lumen AI](../lumen-ai/SKILL.md)
+- Building novel interactions → [Panel Dashboards](../panel-dashboards/SKILL.md)
 
-For AI-powered natural language data exploration, see the **Lumen AI** skill.
+## Related Skills
+
+- **[Lumen AI](../lumen-ai/SKILL.md)** - Conversational data exploration
+- **[Panel Dashboards](../panel-dashboards/SKILL.md)** - Custom Python dashboards
+- **[Plotting Fundamentals](../plotting-fundamentals/SKILL.md)** - Quick plotting with hvPlot
