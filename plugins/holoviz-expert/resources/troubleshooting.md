@@ -2,917 +2,452 @@
 
 ## Overview
 
-Common issues, error messages, and solutions for the HoloViz ecosystem. Organized by library and problem type.
+Solutions for common issues across the HoloViz ecosystem. Organized by library for quick problem resolution.
 
----
+**How to use this guide**:
+1. Identify which library is causing the issue
+2. Check the appropriate troubleshooting file
+3. Try common debugging strategies if issue persists
+4. Consult community resources
 
-## Panel Issues
+## Library-Specific Troubleshooting
 
-### Display and Rendering
+### Panel Issues
 
-#### Issue: Plot Not Displaying
+**Common problems**: Server won't start, widgets not updating, deployment issues, authentication problems
 
-**Symptoms**: Empty output, no visualization shown
+**See**: [Panel Troubleshooting](./troubleshooting/panel-troubleshooting.md)
 
-**Solutions**:
+**Load when**: Panel server issues, widget problems, or deployment errors
 
-1. **Missing extension call**
-```python
-# Wrong
-import panel as pn
-app = pn.Column(...)
+### HoloViews Issues
 
-# Correct
-import panel as pn
-pn.extension('bokeh')  # or 'plotly', 'vega', etc.
-app = pn.Column(...)
-```
+**Common problems**: Plots not rendering, composition errors, dimension mismatches, backend issues
 
-2. **Missing `.servable()` in deployment**
-```python
-# For panel serve
-app = pn.Column(...)
-app.servable()  # Required for deployment
-```
+**See**: [HoloViews Troubleshooting](./troubleshooting/holoviews-troubleshooting.md)
 
-3. **Jupyter notebook display issues**
-```python
-# Ensure extension is loaded in first cell
-import panel as pn
-pn.extension()
+**Load when**: Visualization rendering problems or HoloViews-specific errors
 
-# For inline display
-app = pn.Column(...)
-app  # Display directly
-```
+### Datashader Issues
 
-#### Issue: Updates Not Reflecting
+**Common problems**: Performance degradation, memory errors, aggregation failures, colormapping issues
 
-**Symptoms**: Changes to parameters don't update the UI
+**See**: [Datashader Troubleshooting](./troubleshooting/datashader-troubleshooting.md)
 
-**Solutions**:
+**Load when**: Large dataset rendering problems or Datashader errors
 
-1. **Missing `@param.depends` decorator**
-```python
-# Wrong
-def view(self):
-    return pn.pane.Markdown(f"Value: {self.param_value}")
+### GeoViews Issues
 
-# Correct
-@param.depends('param_value')
-def view(self):
-    return pn.pane.Markdown(f"Value: {self.param_value}")
-```
+**Common problems**: CRS errors, tile provider failures, projection mismatches, geographic data loading
 
-2. **Incorrect use of `watch=True`**
-```python
-# Wrong: Double execution when method is monitored by Panel
-@param.depends('value', watch=True)
-def update_display(self):
-    return pn.pane.Markdown(str(self.value))
+**See**: [GeoViews Troubleshooting](./troubleshooting/geoviews-troubleshooting.md)
 
-# Correct: Only use watch for parameter-to-parameter dependencies
-@param.depends('value')  # No watch=True
-def update_display(self):
-    return pn.pane.Markdown(str(self.value))
-```
+**Load when**: Map rendering issues or geographic data problems
 
-3. **Mutable default without instantiate**
-```python
-# Wrong: Shared state across instances
-tags = param.List(default=[])
+### Param Issues
 
-# Correct
-tags = param.List(default=[], instantiate=True)
-```
+**Common problems**: Validation errors, dependency loops, watcher not firing, parameter inheritance
 
-### Performance Issues
+**See**: [Param Troubleshooting](./troubleshooting/param-troubleshooting.md)
 
-#### Issue: Dashboard Running Slowly
+**Load when**: Parameter system errors or reactive update issues
 
-**Symptoms**: Laggy interface, slow updates
+### hvPlot Issues
 
-**Diagnostic approach**:
+**Common problems**: Import errors, plot not showing, groupby failures, kind not recognized
 
-1. **Profile the application** ([Panel Profiling Guide](https://panel.holoviz.org/how_to/profiling/profile.html))
-```bash
-panel serve app.py --profiler pyinstrument
-```
+**See**: [hvPlot Troubleshooting](./troubleshooting/hvplot-troubleshooting.md)
 
-2. **Check for common bottlenecks**:
-   - Large data transfers to browser
-   - Expensive computations in callbacks
-   - Missing caching
-   - Too frequent updates
-
-**Solutions**:
-
-1. **Enable caching**
-```python
-import panel as pn
-
-pn.config.cache = True
-
-@pn.cache
-def load_data():
-    return pd.read_csv('large_file.csv')
-```
-
-2. **Throttle updates**
-```python
-# Reduce update frequency
-slider = pn.widgets.FloatSlider(throttled=True)
-
-# Or globally
-pn.config.throttled = True
-```
-
-3. **Use background tasks for expensive operations**
-```python
-import asyncio
-
-async def expensive_operation():
-    await asyncio.sleep(2)  # Simulate work
-    return result
-
-@param.depends('trigger')
-async def update(self):
-    result = await expensive_operation()
-    return pn.pane.Markdown(str(result))
-```
-
-4. **Reduce data sent to browser**
-```python
-# Wrong: Send millions of points to browser
-plot = df.hvplot.scatter(x='x', y='y')  # df has 10M rows
-
-# Correct: Aggregate or use Datashader
-from holoviews.operation.datashader import datashade
-plot = datashade(hv.Points(df, ['x', 'y']))
-```
-
-#### Issue: Memory Usage Growing Over Time
-
-**Symptoms**: Application memory increases with each interaction
-
-**Solutions**:
-
-1. **Clear cached data periodically**
-```python
-def clear_old_cache():
-    pn.state.cache.clear()
-```
-
-2. **Use session-specific state**
-```python
-# Wrong: Global state shared across users
-data_cache = {}
-
-# Correct: Session-specific state
-def create_app():
-    state = pn.state
-    if 'data_cache' not in state:
-        state.data_cache = {}
-    # Use state.data_cache
-```
-
-3. **Profile memory usage**
-```bash
-panel serve app.py --profiler memray
-```
-
-### Deployment Issues
-
-#### Issue: Works in Notebook, Fails in Deployment
-
-**Symptoms**: Application works locally but fails with `panel serve`
-
-**Solutions**:
-
-1. **Wrap application in function for session isolation**
-```python
-# Wrong: Shared state
-dashboard = Dashboard()
-dashboard.view().servable()
-
-# Correct: Per-session instances
-def create_dashboard():
-    dashboard = Dashboard()
-    return dashboard.view()
-
-create_dashboard().servable()
-```
-
-2. **Use relative paths**
-```python
-# Wrong: Absolute path
-df = pd.read_csv('/Users/me/data.csv')
-
-# Correct: Relative to script
-import os
-script_dir = os.path.dirname(__file__)
-data_path = os.path.join(script_dir, 'data.csv')
-df = pd.read_csv(data_path)
-```
-
-3. **Check environment variables**
-```python
-# Set appropriate defaults
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-```
-
-#### Issue: CORS Errors in Deployment
-
-**Symptoms**: Cross-origin errors in browser console
-
-**Solutions**:
-
-1. **Configure allowed origins**
-```bash
-panel serve app.py --allow-websocket-origin=myapp.com
-```
-
-2. **In code**
-```python
-pn.config.allow_websocket_origin = ['localhost:5006', 'myapp.com']
-```
-
----
-
-## HoloViews Issues
-
-### Display Problems
-
-#### Issue: Plot Displays but is Empty
-
-**Symptoms**: Axes visible but no data shown
-
-**Solutions**:
-
-1. **Check data structure**
-```python
-# Verify data is not empty
-print(len(df))
-print(df.head())
-
-# Check column names match exactly
-hv.Scatter(df, 'x_col', 'y_col')  # Column names must be exact
-```
-
-2. **Verify dimension order**
-```python
-# HoloViews expects (kdims, vdims)
-# Wrong
-hv.Scatter(df, 'value', 'category')  # Probably backwards
-
-# Correct
-hv.Scatter(df, 'category', 'value')  # kdims, then vdims
-```
-
-3. **Check for NaN values**
-```python
-# Remove NaN values
-df_clean = df.dropna(subset=['x', 'y'])
-scatter = hv.Scatter(df_clean, 'x', 'y')
-```
-
-#### Issue: Options Not Applied
-
-**Symptoms**: `.opts()` calls have no effect
-
-**Solutions**:
-
-1. **Use correct backend**
-```python
-import holoviews as hv
-hv.extension('bokeh')  # Specify backend
-
-# Some options are backend-specific
-scatter.opts(size=10)  # Works with Bokeh
-```
-
-2. **Check option names**
-```python
-# Wrong
-scatter.opts(colour='red')  # British spelling not accepted
-
-# Correct
-scatter.opts(color='red')  # American spelling
-```
-
-3. **Apply to correct element**
-```python
-# Overlay options vs element options
-overlay = scatter * curve
-
-# Wrong: Options on overlay
-overlay.opts(color='red')  # Won't work as expected
-
-# Correct: Options on individual elements
-scatter.opts(color='blue')
-curve.opts(color='red')
-overlay = scatter * curve
-```
-
-### Composition Issues
-
-#### Issue: Overlay Not Displaying Properly
-
-**Symptoms**: Only one element shows, or elements don't align
-
-**Solutions**:
-
-1. **Ensure matching dimensions**
-```python
-# Elements must share key dimensions
-scatter = hv.Scatter(df, 'x', 'y')
-curve = hv.Curve(df2, 'x', 'y')  # Same kdims
-overlay = scatter * curve
-```
-
-2. **Check coordinate ranges**
-```python
-# Elements might be outside visible range
-scatter.opts(xlim=(-10, 10), ylim=(-10, 10))
-curve.opts(xlim=(-10, 10), ylim=(-10, 10))
-```
-
-3. **Verify element types**
-```python
-# Can't overlay incompatible types
-# Check what you're overlaying
-print(type(element1), type(element2))
-```
-
----
-
-## Datashader Issues
-
-### Performance Problems
-
-#### Issue: Datashader Rendering is Slow
-
-**Symptoms**: Long wait times for plot updates
-
-**Solutions**:
-
-1. **Optimize data format** ([Datashader Performance](https://datashader.org/user_guide/Performance.html))
-```python
-# Use Parquet with categorical optimization
-df['category'] = df['category'].astype('category')
-df.to_parquet('data.parquet', compression='snappy')
-
-# Load efficiently
-df = pd.read_parquet('data.parquet')
-```
-
-2. **Use Dask for large datasets**
-```python
-import dask.dataframe as dd
-
-# Convert to Dask
-dask_df = dd.from_pandas(df, npartitions=8)
-dask_df = dask_df.persist()  # Keep in memory if possible
-
-# Use with Datashader
-points = hv.Points(dask_df, ['x', 'y'])
-datashade(points)
-```
-
-3. **Reduce precision**
-```python
-# Use float32 instead of float64
-df['x'] = df['x'].astype('float32')
-df['y'] = df['y'].astype('float32')
-```
-
-#### Issue: Datashader Output Looks Wrong
-
-**Symptoms**: Unexpected colors, missing categories, artifacts
-
-**Solutions**:
-
-1. **Check aggregation type**
-```python
-# For continuous values
-datashade(points, aggregator='mean')
-
-# For categories
-datashade(points, aggregator='count_cat', color_key=['red', 'blue'])
-```
-
-2. **Verify color mapping**
-```python
-# Ensure colormap is appropriate
-import colorcet as cc
-
-# For continuous data
-datashade(points, cmap=cc.fire)
-
-# For categories, specify colors
-datashade(points, color_key=['#FF0000', '#00FF00', '#0000FF'])
-```
-
-3. **Check data range**
-```python
-# Outliers can distort visualization
-# Filter or transform data
-df_filtered = df[(df.x > -3) & (df.x < 3)]
-```
-
-### Integration Issues
-
-#### Issue: No Interactivity with Datashaded Plots
-
-**Symptoms**: Hover, selection don't work
-
-**Explanation**: This is expected behavior ([Datashader FAQ](https://datashader.org/FAQ.html))
-
-**Solutions**:
-
-1. **Use rasterize for aggregated hover**
-```python
-from holoviews.operation.datashader import rasterize
-
-# Rasterize preserves values for hover
-rasterized = rasterize(points, aggregator='mean')
-rasterized.opts(tools=['hover'], colorbar=True)
-```
-
-2. **Implement linked selection**
-```python
-from holoviews import streams
-
-# Create selection stream
-selection = streams.Selection1D()
-# Use with linked plots
-```
-
-3. **Downsample for interaction**
-```python
-# Show datashaded overview + downsampled detail
-overview = datashade(all_points)
-detail = hv.Scatter(sampled_points).opts(tools=['hover'])
-layout = overview + detail
-```
-
----
-
-## GeoViews Issues
-
-### Projection Problems
-
-#### Issue: Map Not Displaying or Misaligned
-
-**Symptoms**: Empty map, coordinates in wrong location
-
-**Solutions**:
-
-1. **Verify CRS is set correctly**
-```python
-import geopandas as gpd
-import geoviews as gv
-
-# Check current CRS
-print(gdf.crs)
-
-# Convert to WGS84 (EPSG:4326)
-gdf = gdf.to_crs('EPSG:4326')
-
-# Specify CRS in GeoViews
-polygons = gv.Polygons(gdf, crs=ccrs.PlateCarree())
-```
-
-2. **Match tile CRS**
-```python
-# Tiles are typically Web Mercator (EPSG:3857)
-from geoviews import tile_sources as gvts
-
-# Your data in WGS84
-polygons = gv.Polygons(gdf, crs=ccrs.PlateCarree())
-
-# Overlay on tiles (GeoViews handles reprojection)
-map_viz = gvts.OSM * polygons
-```
-
-3. **Check coordinate order**
-```python
-# GeoDataFrame: (lon, lat) for WGS84
-# Check if coordinates are swapped
-print(gdf.geometry.iloc[0])
-
-# If swapped, fix with:
-gdf['geometry'] = gdf.geometry.apply(lambda geom: shapely.ops.transform(lambda x, y: (y, x), geom))
-```
-
-#### Issue: Invalid Geometries Error
-
-**Symptoms**: `ValueError` or rendering artifacts
-
-**Solutions**:
-
-1. **Check validity**
-```python
-# Find invalid geometries
-invalid = gdf[~gdf.is_valid]
-print(f"Invalid geometries: {len(invalid)}")
-
-# Identify issues
-for idx, row in invalid.iterrows():
-    print(f"{idx}: {shapely.validation.explain_validity(row.geometry)}")
-```
-
-2. **Fix invalid geometries**
-```python
-# Simple fix: buffer by 0
-gdf['geometry'] = gdf.geometry.buffer(0)
-
-# More robust
-gdf['geometry'] = gdf.geometry.make_valid()
-```
-
-3. **Simplify complex geometries**
-```python
-# Reduce complexity if needed
-gdf['geometry'] = gdf.geometry.simplify(tolerance=0.01)
-```
-
-### Performance Issues with Geographic Data
-
-#### Issue: Slow Rendering of Many Features
-
-**Symptoms**: Lag when displaying many polygons/points
-
-**Solutions**:
-
-1. **Simplify geometries**
-```python
-# Reduce polygon complexity
-gdf['geometry'] = gdf.geometry.simplify(tolerance=0.01, preserve_topology=True)
-```
-
-2. **Use Datashader for large point sets**
-```python
-from holoviews.operation.datashader import datashade
-
-# Convert to Points
-points = gv.Points(gdf, vdims=['value'])
-
-# Datashade
-shaded = datashade(points)
-map_viz = gvts.OSM * shaded
-```
-
-3. **Filter features by zoom level**
-```python
-# Only show detailed features when zoomed in
-# (requires dynamic map implementation)
-```
-
----
-
-## Param Issues
-
-### Parameter Definition Problems
-
-#### Issue: Parameter Value Not Updating
-
-**Symptoms**: Setting parameter has no effect
-
-**Solutions**:
-
-1. **Check bounds and validation**
-```python
-# Value might be rejected silently
-count = param.Integer(default=10, bounds=(1, 100))
-
-# This won't work (out of bounds)
-obj.count = 1000  # Silently ignored or raises error
-
-# Check current value
-print(obj.count)  # Still 10
-```
-
-2. **Verify parameter is not readonly**
-```python
-# Check parameter definition
-value = param.Number(default=1.0, readonly=True)
-
-# Can't set readonly parameters
-obj.value = 2.0  # Error or ignored
-```
-
-3. **Use correct syntax**
-```python
-# Wrong
-obj.param.value = 10  # This sets the Parameter object
-
-# Correct
-obj.value = 10  # This sets the parameter value
-```
-
-#### Issue: Watchers Not Firing
-
-**Symptoms**: `@param.depends` or `.watch()` callbacks not executing
-
-**Solutions**:
-
-1. **Verify parameter name is correct**
-```python
-# Wrong
-@param.depends('valu')  # Typo
-def callback(self):
-    pass
-
-# Correct
-@param.depends('value')
-def callback(self):
-    pass
-```
-
-2. **Check if value actually changed**
-```python
-# Watchers only fire on change
-obj.value = 10
-obj.value = 10  # No change, watcher won't fire
-```
-
-3. **Use correct watch syntax**
-```python
-# Wrong
-obj.param.watch(callback)  # Missing parameter name
-
-# Correct
-obj.param.watch(callback, 'value')
-
-# Or with decorator
-@param.depends('value', watch=True)
-def callback(self):
-    pass
-```
-
----
-
-## hvPlot Issues
-
-### Import and Setup
-
-#### Issue: `hvplot` Accessor Not Available
-
-**Symptoms**: `AttributeError: 'DataFrame' object has no attribute 'hvplot'`
-
-**Solutions**:
-
-1. **Import hvplot extension**
-```python
-# Wrong
-import hvplot
-
-# Correct - import for your data type
-import hvplot.pandas  # For pandas DataFrames
-import hvplot.xarray  # For xarray
-import hvplot.dask    # For Dask
-```
-
-2. **Verify pandas/data library is installed**
-```python
-import pandas as pd
-import hvplot.pandas
-
-df = pd.DataFrame({'x': [1, 2, 3], 'y': [4, 5, 6]})
-df.hvplot()  # Now works
-```
-
-### Plotting Issues
-
-#### Issue: Geographic Plot Not Working
-
-**Symptoms**: Error with `geo=True` or tiles not showing
-
-**Solutions**:
-
-1. **Install geoviews**
-```bash
-conda install geoviews
-# or
-pip install geoviews
-```
-
-2. **Ensure data has geographic coordinates**
-```python
-# Data must have lon/lat columns
-df.hvplot.points('lon', 'lat', geo=True, tiles='OSM')
-```
-
-3. **Check coordinate ranges**
-```python
-# Coordinates should be valid ranges
-# Latitude: -90 to 90
-# Longitude: -180 to 180
-print(df[['lon', 'lat']].describe())
-```
-
----
+**Load when**: hvPlot API issues or quick plotting problems
 
 ## Common Error Messages
 
-### `BokehUserWarning: ColumnDataSource's columns must be of the same length`
+### "No module named 'X'"
 
-**Cause**: Mismatched array lengths in data
-
-**Solution**:
-```python
-# Check data lengths
-print({col: len(df[col]) for col in df.columns})
-
-# Ensure all columns have same length
-df = df.dropna()  # Remove rows with missing values
-```
-
-### `ValueError: data does not match declared dimensions`
-
-**Cause**: Column names don't match HoloViews dimensions
-
-**Solution**:
-```python
-# Check column names
-print(df.columns.tolist())
-
-# Use exact column names
-scatter = hv.Scatter(df, 'x_column', 'y_column')  # Must match exactly
-```
-
-### `ImportError: Panel requires Bokeh version >=3.0`
-
-**Cause**: Version mismatch
+**Problem**: Missing dependency
 
 **Solution**:
 ```bash
-# Update dependencies
-conda update panel bokeh holoviews
-# or
-pip install -U panel bokeh holoviews
+# Install missing library
+pip install X
+
+# Or install with specific extra
+pip install panel[recommended]
+pip install lumen[ai]
 ```
 
-### `KeyError: 'column_name'`
+### "Javascript Error: <model> could not be instantiated"
 
-**Cause**: Column doesn't exist in DataFrame
+**Problem**: Extension not loaded
 
 **Solution**:
 ```python
-# Verify column exists
-print(df.columns)
-
-# Check for spacing/casing issues
-print([col for col in df.columns if 'value' in col.lower()])
+import panel as pn
+pn.extension('tabulator', 'plotly')  # Load required extensions
 ```
 
----
+### "BokehDeprecationWarning"
+
+**Problem**: Using deprecated API
+
+**Solution**:
+- Check documentation for updated API
+- Update code to use new methods
+- Or suppress warnings (not recommended):
+```python
+import warnings
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+```
+
+### "Object of type X is not JSON serializable"
+
+**Problem**: Trying to serialize non-JSON-compatible object
+
+**Solution**:
+```python
+# Convert to JSON-compatible types
+import json
+import numpy as np
+
+# Use tolist() for numpy arrays
+data = {
+    'values': np_array.tolist(),
+    'timestamp': datetime_obj.isoformat()
+}
+```
+
+### "RuntimeError: There is no current event loop"
+
+**Problem**: Async code running without event loop
+
+**Solution**:
+```python
+# Use async context
+import asyncio
+
+async def main():
+    # Your async code here
+    pass
+
+asyncio.run(main())
+
+# Or for Panel
+pn.serve(app, port=5006)
+```
+
+## Quick Debugging Checklist
+
+### Visualization Not Showing
+
+- [ ] Extensions loaded? (`pn.extension()`, `hv.extension()`)
+- [ ] Data not empty? (check `df.head()`)
+- [ ] Correct dimensions specified? (check column names)
+- [ ] In Jupyter: cell executed and output visible?
+- [ ] In script: `.servable()` or `.show()` called?
+
+### Widget Not Updating
+
+- [ ] `@param.depends` decorator present?
+- [ ] Correct parameter names in decorator?
+- [ ] Method returns a displayable object?
+- [ ] Parameter actually changing? (add print statement)
+- [ ] No circular dependencies?
+
+### Performance Issues
+
+- [ ] Data size reasonable? (< 100K rows for most operations)
+- [ ] Using Datashader for large data?
+- [ ] Caching enabled where appropriate?
+- [ ] Unnecessary recomputation happening?
+- [ ] Memory leaks from unclosed resources?
+
+### Import Errors
+
+- [ ] All dependencies installed?
+- [ ] Correct package versions?
+- [ ] Virtual environment activated?
+- [ ] No conflicting package versions?
+- [ ] Python version compatible? (3.9+)
 
 ## Debugging Strategies
 
-### Enable Debug Mode
+### 1. Enable Debug Logging
 
 ```python
+import logging
+
+# Set logging level
+logging.basicConfig(level=logging.DEBUG)
+
+# Panel-specific logging
 import panel as pn
-import holoviews as hv
-
-# Panel debug mode
 pn.config.console_output = 'accumulate'
-
-# HoloViews debug
-hv.extension('bokeh', logo=False)
 ```
 
-### Check Versions
+### 2. Isolate the Problem
+
+```python
+# Test with minimal example
+import panel as pn
+pn.extension()
+
+# Simplest possible test
+pn.panel("Hello").show()  # Does this work?
+```
+
+### 3. Check Versions
 
 ```python
 import panel as pn
 import holoviews as hv
 import datashader as ds
-import param
 
 print(f"Panel: {pn.__version__}")
 print(f"HoloViews: {hv.__version__}")
 print(f"Datashader: {ds.__version__}")
-print(f"Param: {param.__version__}")
 ```
 
-### Inspect Objects
+### 4. Inspect Objects
 
 ```python
-# Check element type
-print(type(plot))
+# Check data
+print(df.head())
+print(df.dtypes)
+print(df.shape)
 
-# View data
-print(plot.data.head() if hasattr(plot, 'data') else 'No data attribute')
+# Check HoloViews elements
+print(element.dimensions())
+print(element.data)
 
-# Check dimensions
-print(plot.kdims, plot.vdims)
-
-# View options
-print(hv.opts.Scatter.allowed())
+# Check Panel components
+print(component.param)
+print(component.param.values())
 ```
 
-### Browser Console
+### 5. Use Browser DevTools
 
-For Panel apps, check browser console (F12) for JavaScript errors:
-- WebSocket connection issues
-- JavaScript errors
-- Network problems
+For Panel applications:
+1. Open browser DevTools (F12)
+2. Check Console for JavaScript errors
+3. Check Network tab for failed requests
+4. Check WebSocket connection status
 
----
-
-## Getting Help
-
-### Documentation
-
-- [Panel Documentation](https://panel.holoviz.org)
-- [HoloViews Documentation](https://holoviews.org)
-- [Datashader Documentation](https://datashader.org)
-- [GeoViews Documentation](https://geoviews.org)
-- [Param Documentation](https://param.holoviz.org)
-
-### Community Support
-
-- [HoloViz Discourse](https://discourse.holoviz.org) - Q&A forum
-- [GitHub Issues](https://github.com/holoviz/) - Bug reports
-- [Stack Overflow](https://stackoverflow.com/questions/tagged/holoviz) - Tagged questions
-
-### Debugging Checklist
-
-Before asking for help:
-
-1. [ ] Check version compatibility
-2. [ ] Verify data format and contents
-3. [ ] Review error messages carefully
-4. [ ] Test with minimal reproducible example
-5. [ ] Check browser console for JavaScript errors
-6. [ ] Search documentation and issues
-7. [ ] Prepare code snippet that reproduces issue
-
----
-
-## Performance Profiling Tools
-
-### Panel Profiling
+### 6. Test in Different Environments
 
 ```bash
-# Time profiling
-panel serve app.py --profiler pyinstrument
+# Test in Python shell
+python -c "import panel; panel.__version__"
 
-# Memory profiling
-panel serve app.py --profiler memray
+# Test in Jupyter
+jupyter lab  # or jupyter notebook
 
-# Interactive profiling
-panel serve app.py --profiler snakeviz
+# Test standalone
+panel serve app.py --show
 ```
 
-### Python Profiling
+## Performance Profiling
+
+### Memory Profiling
 
 ```python
-# Time profiling
-import cProfile
-cProfile.run('expensive_function()')
-
-# Memory profiling
 from memory_profiler import profile
 
 @profile
-def expensive_function():
-    # Your code
+def create_dashboard():
+    # Your code here
     pass
+
+create_dashboard()
 ```
 
-### Browser Performance
+### Time Profiling
 
-Use browser DevTools:
-- Network tab: Check data transfer sizes
-- Performance tab: Profile rendering
-- Memory tab: Check for memory leaks
+```python
+import cProfile
+import pstats
 
----
+profiler = cProfile.Profile()
+profiler.enable()
+
+# Your code here
+
+profiler.disable()
+stats = pstats.Stats(profiler)
+stats.sort_stats('cumulative')
+stats.print_stats(20)
+```
+
+### Panel Performance Debugging
+
+```python
+import panel as pn
+
+# Enable performance logging
+pn.config.profiler = 'pyinstrument'  # or 'snakeviz'
+
+# Run your app
+app.servable()
+```
+
+## Getting Help
+
+### Before Asking for Help
+
+1. **Search existing issues**: Check GitHub issues and Discourse
+2. **Create minimal example**: Reduce to simplest reproducible case
+3. **Check documentation**: Review relevant docs and examples
+4. **Include versions**: List all package versions
+5. **Show error messages**: Include full error traceback
+
+### Where to Get Help
+
+**Community Forum** (Best for questions):
+- [HoloViz Discourse](https://discourse.holoviz.org)
+- Searchable history
+- Community support
+
+**GitHub Issues** (For bugs):
+- [Panel Issues](https://github.com/holoviz/panel/issues)
+- [HoloViews Issues](https://github.com/holoviz/holoviews/issues)
+- [Datashader Issues](https://github.com/holoviz/datashader/issues)
+- [GeoViews Issues](https://github.com/holoviz/geoviews/issues)
+
+**Stack Overflow** (For coding questions):
+- Tag: `holoviews`, `panel`, `datashader`
+- Good for general coding questions
+
+### Minimal Reproducible Example Template
+
+```python
+"""
+Issue: [Brief description]
+
+Environment:
+- Python: 3.11
+- Panel: 1.3.0
+- HoloViews: 1.18.0
+- OS: macOS / Linux / Windows
+"""
+
+import panel as pn
+import holoviews as hv
+
+pn.extension()
+hv.extension('bokeh')
+
+# Minimal code that reproduces the issue
+def create_issue():
+    # Your minimal example here
+    pass
+
+# Expected: [What should happen]
+# Actual: [What actually happens]
+# Error: [Full error message if any]
+```
+
+## Environment Troubleshooting
+
+### Virtual Environment Issues
+
+```bash
+# Verify environment is activated
+which python  # Should show venv path
+
+# Recreate environment if needed
+python -m venv fresh_env
+source fresh_env/bin/activate  # or fresh_env\Scripts\activate on Windows
+pip install panel holoviews
+```
+
+### Package Conflicts
+
+```bash
+# Check for conflicts
+pip check
+
+# Create requirements file
+pip freeze > requirements.txt
+
+# Fresh install
+pip uninstall -y panel holoviews datashader
+pip install panel holoviews datashader
+```
+
+### Jupyter Extension Issues
+
+```bash
+# Reinstall Jupyter extensions
+jupyter labextension install @pyviz/jupyterlab_pyviz
+
+# Or for JupyterLab 3+
+pip install jupyterlab_pyviz
+```
+
+## Quick Reference: Error → Solution
+
+| Error | Solution | Doc Link |
+|-------|----------|----------|
+| Plot not showing | Load extensions | [Panel](./troubleshooting/panel-troubleshooting.md) |
+| Widget not updating | Check `@param.depends` | [Param](./troubleshooting/param-troubleshooting.md) |
+| Memory error with large data | Use Datashader | [Datashader](./troubleshooting/datashader-troubleshooting.md) |
+| CRS/projection error | Check coordinate systems | [GeoViews](./troubleshooting/geoviews-troubleshooting.md) |
+| Server won't start | Check port availability | [Panel](./troubleshooting/panel-troubleshooting.md) |
+| Import error | Install dependencies | All docs |
+| JavaScript error | Load extensions | [Panel](./troubleshooting/panel-troubleshooting.md) |
+
+## Common Solutions by Symptom
+
+### Nothing Displays
+
+1. Check extensions loaded
+2. Verify data not empty
+3. Ensure cell executed (Jupyter)
+4. Check `.servable()` or `.show()` called
+
+**See**: [Panel Troubleshooting](./troubleshooting/panel-troubleshooting.md#displays)
+
+### Slow Performance
+
+1. Check data size
+2. Use Datashader for large data
+3. Enable caching
+4. Profile code
+
+**See**: [Performance Patterns](./patterns/performance-patterns.md)
+
+### Unexpected Behavior
+
+1. Check parameter values
+2. Verify data types
+3. Test with simple example
+4. Enable debug logging
+
+**See**: Library-specific troubleshooting guides
 
 ## Summary
 
-Most common issues:
-1. Missing extension calls
-2. Incorrect parameter dependencies
-3. Data format mismatches
-4. CRS/projection problems
-5. Performance bottlenecks
-6. Version incompatibilities
+Most issues fall into these categories:
+1. **Missing dependencies** → Install required packages
+2. **Extensions not loaded** → Add `pn.extension()` / `hv.extension()`
+3. **Data issues** → Check data shape, types, and contents
+4. **Configuration** → Verify parameters and settings
+5. **Environment** → Check package versions and conflicts
 
-Always start by:
-1. Checking error messages carefully
-2. Verifying data structure and contents
-3. Ensuring correct library versions
-4. Testing with minimal examples
+**Next steps**:
+1. Identify the specific library causing issues
+2. Check the relevant troubleshooting guide
+3. Try debugging strategies
+4. Ask community if still stuck
 
-## References
+## Library Troubleshooting References
 
-- [Datashader FAQ](https://datashader.org/FAQ.html)
-- [Datashader Performance Guide](https://datashader.org/user_guide/Performance.html)
-- [Datashader Plotting Pitfalls](https://datashader.org/user_guide/Plotting_Pitfalls.html)
-- [Panel Profiling Guide](https://panel.holoviz.org/how_to/profiling/profile.html)
-- [Panel How-To Guides](https://panel.holoviz.org/how_to/)
+- **[Panel Troubleshooting](./troubleshooting/panel-troubleshooting.md)** - Server, widgets, deployment
+- **[HoloViews Troubleshooting](./troubleshooting/holoviews-troubleshooting.md)** - Plots, composition, backends
+- **[Datashader Troubleshooting](./troubleshooting/datashader-troubleshooting.md)** - Performance, memory, aggregation
+- **[GeoViews Troubleshooting](./troubleshooting/geoviews-troubleshooting.md)** - Maps, CRS, projections
+- **[Param Troubleshooting](./troubleshooting/param-troubleshooting.md)** - Parameters, validation, dependencies
+- **[hvPlot Troubleshooting](./troubleshooting/hvplot-troubleshooting.md)** - Quick plotting issues
+
+---
+
+**Note**: Each troubleshooting file contains specific error messages, solutions, and workarounds for that library. Load only the file relevant to your issue.
